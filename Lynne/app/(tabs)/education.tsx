@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function HomeScreen() {
+export default function EducationScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Home</Text>
+      <Text style={styles.title}>Education</Text>
     </View>
   );
 }
@@ -18,4 +18,4 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-});
+}); 
