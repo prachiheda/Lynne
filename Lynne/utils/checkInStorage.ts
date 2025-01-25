@@ -42,9 +42,9 @@ export const saveCheckIn = async (
 export const getCheckInStatus = (timeDiff: number): CheckInStatus => {
   if (timeDiff <= 5) {
     return 'onTime';
-  } else if (timeDiff <= 15) {
-    return 'slightlyLate';
   } else if (timeDiff <= 60) {
+    return 'slightlyLate';
+  } else if (timeDiff <= 180) {
     return 'veryLate';
   } else {
     return 'missed';
