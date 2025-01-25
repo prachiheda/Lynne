@@ -11,11 +11,13 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   getNotificationSettings,
   saveNotificationSettings,
   type NotificationSettings,
 } from '../../../utils/notificationService';
+import { signInWithGoogle } from '../../../utils/googleCalendarService';
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState<NotificationSettings>({
@@ -23,6 +25,7 @@ export default function SettingsScreen() {
     reminderInterval: 10,
     stopRemindersAfterCheckIn: true,
   });
+  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -42,6 +45,20 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleConnectCalendar = async () => {
+    try {
+      const success = await signInWithGoogle();
+      if (success) {
+        setIsCalendarConnected(true);
+        Alert.alert('Success', 'Google Calendar connected successfully!');
+      } else {
+        Alert.alert('Error', 'Failed to connect Google Calendar. Please try again.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to connect Google Calendar. Please try again.');
+    }
+  };
+
   const validateAndUpdateNumber = (value: string, field: keyof NotificationSettings) => {
     const num = parseInt(value);
     if (isNaN(num) || num < 0) {
@@ -57,8 +74,25 @@ export default function SettingsScreen() {
       style={styles.container}
     >
       <ScrollView style={styles.scrollView}>
-        <Text style={styles.title}>Notification Settings</Text>
+        <Text style={styles.title}>Settings</Text>
         
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Google Calendar</Text>
+          <TouchableOpacity 
+            style={styles.calendarButton} 
+            onPress={handleConnectCalendar}
+          >
+            <MaterialIcons 
+              name={isCalendarConnected ? "check-circle" : "add-circle"} 
+              size={24} 
+              color={isCalendarConnected ? "#4CAF50" : "#007AFF"} 
+            />
+            <Text style={styles.calendarButtonText}>
+              {isCalendarConnected ? 'Calendar Connected' : 'Connect Google Calendar'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Reminder Timing</Text>
           
@@ -171,5 +205,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  calendarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  calendarButtonText: {
+    fontSize: 16,
+    marginLeft: 10,
+    color: '#007AFF',
   },
 }); 

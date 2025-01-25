@@ -25,6 +25,7 @@ import {
   getNotificationSettings,
 } from '../../utils/notificationService';
 import { Colors } from '../../constants/Colors';
+import { checkForConflicts } from '../../utils/googleCalendarService';
 
 export default function HomeScreen() {
   // 1. Persistent daily target time
@@ -47,6 +48,9 @@ export default function HomeScreen() {
   // Add new state for temporary date selection
   const [tempSelectedDate, setTempSelectedDate] = useState<Date | null>(null);
 
+  // 5. Calendar recommendation
+  const [calendarRecommendation, setCalendarRecommendation] = useState<any>(null);
+
   // Initialize notifications on mount
   useEffect(() => {
     initializeNotifications();
@@ -59,11 +63,28 @@ export default function HomeScreen() {
     }
   }, [dailyTargetTimeState]);
 
+  // Check for calendar conflicts when daily target time changes
+  useEffect(() => {
+    if (dailyTargetTimeState) {
+      checkCalendarConflicts();
+    }
+  }, [dailyTargetTimeState]);
+
   const updateNotifications = async () => {
     if (!dailyTargetTimeState) return;
     
     const settings = await getNotificationSettings();
     await scheduleNotifications(dailyTargetTimeState, settings);
+  };
+
+  const checkCalendarConflicts = async () => {
+    if (!dailyTargetTimeState) return;
+    const conflicts = await checkForConflicts(dailyTargetTimeState);
+    setCalendarRecommendation(conflicts);
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   // ---------------------------
@@ -403,6 +424,51 @@ useEffect(() => {
           )}
         </View>
       )}
+
+      {/* Calendar Recommendations */}
+      {calendarRecommendation && (
+        <View style={styles.recommendationContainer}>
+          <Text style={styles.recommendationTitle}>Smart Recommendation</Text>
+          <Text style={styles.recommendationText}>
+            Looks like you have a conflict with "{calendarRecommendation.conflictEvent.summary}" at{' '}
+            {formatTime(calendarRecommendation.conflictEvent.start)}.
+          </Text>
+          <Text style={styles.recommendationText}>We recommend taking your birth control:</Text>
+          {calendarRecommendation.recommendedTimes.before && (
+            <Text style={styles.recommendationOption}>
+              • Before at {formatTime(calendarRecommendation.recommendedTimes.before)}
+            </Text>
+          )}
+          {calendarRecommendation.recommendedTimes.after && (
+            <Text style={styles.recommendationOption}>
+              • After at {formatTime(calendarRecommendation.recommendedTimes.after)}
+            </Text>
+          )}
+        </View>
+
+      )}
+
+      {/* Calendar Recommendations */}
+      {calendarRecommendation && (
+        <View style={styles.recommendationContainer}>
+          <Text style={styles.recommendationTitle}>Smart Recommendation</Text>
+          <Text style={styles.recommendationText}>
+            Looks like you have a conflict with "{calendarRecommendation.conflictEvent.summary}" at{' '}
+            {formatTime(calendarRecommendation.conflictEvent.start)}.
+          </Text>
+          <Text style={styles.recommendationText}>We recommend taking your birth control:</Text>
+          {calendarRecommendation.recommendedTimes.before && (
+            <Text style={styles.recommendationOption}>
+              • Before at {formatTime(calendarRecommendation.recommendedTimes.before)}
+            </Text>
+          )}
+          {calendarRecommendation.recommendedTimes.after && (
+            <Text style={styles.recommendationOption}>
+              • After at {formatTime(calendarRecommendation.recommendedTimes.after)}
+            </Text>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -515,5 +581,33 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     resizeMode: 'contain',
+
+  recommendationContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    margin: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  recommendationTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#007AFF',
+  },
+  recommendationText: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#333',
+  },
+  recommendationOption: {
+    fontSize: 16,
+    marginLeft: 10,
+    marginBottom: 5,
+    color: '#4CAF50',
   },
 });
