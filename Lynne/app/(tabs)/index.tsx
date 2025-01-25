@@ -471,6 +471,29 @@ useEffect(() => {
             </Text>
           )}
         </View>
+
+      )}
+
+      {/* Calendar Recommendations */}
+      {calendarRecommendation && (
+        <View style={styles.recommendationContainer}>
+          <Text style={styles.recommendationTitle}>Smart Recommendation</Text>
+          <Text style={styles.recommendationText}>
+            Looks like you have a conflict with "{calendarRecommendation.conflictEvent.summary}" at{' '}
+            {formatTime(calendarRecommendation.conflictEvent.start)}.
+          </Text>
+          <Text style={styles.recommendationText}>We recommend taking your birth control:</Text>
+          {calendarRecommendation.recommendedTimes.before && (
+            <Text style={styles.recommendationOption}>
+              • Before at {formatTime(calendarRecommendation.recommendedTimes.before)}
+            </Text>
+          )}
+          {calendarRecommendation.recommendedTimes.after && (
+            <Text style={styles.recommendationOption}>
+              • After at {formatTime(calendarRecommendation.recommendedTimes.after)}
+            </Text>
+          )}
+        </View>
       )}
     </View>
   );
