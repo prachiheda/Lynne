@@ -15,11 +15,20 @@ export default function TabLayout() {
         headerShown: false,
       }}>
       <Tabs.Screen
-        name="/"
+        name="index"
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="home" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="calendar/index"
+        options={{
+          title: 'Calendar',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="calendar-today" size={24} color={color} />
           ),
         }}
       />
