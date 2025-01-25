@@ -127,7 +127,7 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     justifyContent: 'center', // Center vertically
     alignItems: 'center', // Center horizontally
   },
