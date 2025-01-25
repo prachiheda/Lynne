@@ -29,7 +29,15 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerShown: false, // Hide headers globally
+          contentStyle: {
+            flex: 1, // Ensure each screen occupies full height
+            backgroundColor: 'white', // Adjust background color if needed
+          },
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
