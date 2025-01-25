@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CHECKIN_KEY = 'checkin_history';
+const DAILY_TARGET_TIME_KEY = 'daily_target_time';
 
 export type CheckInStatus = 'onTime' | 'slightlyLate' | 'veryLate' | 'missed';
 
@@ -36,6 +37,25 @@ export const saveCheckIn = async (
     await AsyncStorage.setItem(CHECKIN_KEY, JSON.stringify(history));
   } catch (error) {
     console.error('Error saving check-in:', error);
+  }
+};
+
+export const getDailyTargetTime = async (): Promise<Date | null> => {
+  try {
+    const timeStr = await AsyncStorage.getItem(DAILY_TARGET_TIME_KEY);
+    if (!timeStr) return null;
+    return new Date(timeStr);
+  } catch (error) {
+    console.error('Error reading daily target time:', error);
+    return null;
+  }
+};
+
+export const setDailyTargetTime = async (time: Date) => {
+  try {
+    await AsyncStorage.setItem(DAILY_TARGET_TIME_KEY, time.toISOString());
+  } catch (error) {
+    console.error('Error saving daily target time:', error);
   }
 };
 
