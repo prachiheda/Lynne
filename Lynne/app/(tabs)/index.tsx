@@ -17,6 +17,12 @@ import {
   getDailyTargetTime,
   setDailyTargetTime,
 } from '../../utils/checkInStorage';
+import {
+  initializeNotifications,
+  scheduleNotifications,
+  cancelAllNotifications,
+  getNotificationSettings,
+} from '../../utils/notificationService';
 
 export default function HomeScreen() {
   // 1. Persistent daily target time
@@ -33,6 +39,25 @@ export default function HomeScreen() {
 
   // 4. Three dots menu
   const [showEditMenu, setShowEditMenu] = useState(false);
+
+  // Initialize notifications on mount
+  useEffect(() => {
+    initializeNotifications();
+  }, []);
+
+  // Update notifications when daily target time changes
+  useEffect(() => {
+    if (dailyTargetTimeState) {
+      updateNotifications();
+    }
+  }, [dailyTargetTimeState]);
+
+  const updateNotifications = async () => {
+    if (!dailyTargetTimeState) return;
+    
+    const settings = await getNotificationSettings();
+    await scheduleNotifications(dailyTargetTimeState, settings);
+  };
 
   // ---------------------------
   // On Mount: load daily target time + today's check-in
@@ -65,9 +90,8 @@ useEffect(() => {
   // ---------------------------
   //  A) Change persistent daily target time
   // ---------------------------
-  const handleDailyTimePress = () => {
+  const handleDailyTimePress = async () => {
     if (!dailyTargetTimeState) {
-      // First time setting a daily target time
       Alert.alert(
         'Set Daily Time',
         'Are you sure you want to set your daily birth control time?',
@@ -83,10 +107,9 @@ useEffect(() => {
         ]
       );
     } else {
-      // Updating existing daily target time
       Alert.alert(
         'Change Daily Time',
-        'Are you sure you want to change your daily birth control time? This will affect all future check-ins.',
+        'Are you sure you want to change your daily birth control time? This will affect all future check-ins and notifications.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -105,36 +128,34 @@ useEffect(() => {
   //  B) Main circle: check in with current time
   // ---------------------------
   const handleCheckInPress = async () => {
-    // If the user hasn't set a daily target time, block check-in
     if (!dailyTargetTimeState) {
       Alert.alert('Set Daily Time', 'Please set a daily time before checking in.');
       return;
     }
 
-    // If user already checked in today, do nothing
     if (isCheckedIn) {
       return;
     }
 
-    // Use the current time
     const now = new Date();
-
-    // Compute how late (or on-time) the user is
     const targetMinutes =
       dailyTargetTimeState.getHours() * 60 + dailyTargetTimeState.getMinutes();
     const checkInMinutes = now.getHours() * 60 + now.getMinutes();
     const diff = Math.abs(checkInMinutes - targetMinutes);
     const status = getCheckInStatus(diff);
 
-    // Store today's check-in in local storage
     const todayKey = new Date().toISOString().split('T')[0];
     await saveCheckIn(todayKey, status, now.toISOString(), dailyTargetTimeState.toISOString());
 
-    // Update local state
     setTodayCheckInTime(now);
     setIsCheckedIn(true);
 
-    // Show alert
+    // Cancel remaining notifications if setting is enabled
+    const settings = await getNotificationSettings();
+    if (settings.stopRemindersAfterCheckIn) {
+      await cancelAllNotifications();
+    }
+
     let message = '';
     switch (status) {
       case 'onTime':
