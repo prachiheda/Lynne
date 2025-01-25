@@ -7,6 +7,7 @@ import {
   Alert,
   Modal,
   Platform,
+  Image
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -23,14 +24,17 @@ import {
   cancelAllNotifications,
   getNotificationSettings,
 } from '../../utils/notificationService';
+import { Colors } from '../../constants/Colors';
 
 export default function HomeScreen() {
   // 1. Persistent daily target time
   const [dailyTargetTimeState, setDailyTargetTimeState] = useState<Date | null>(null);
 
   // 2. Today's check-in tracking
+  // there are two states: checked in or not checked in
   const [todayCheckInTime, setTodayCheckInTime] = useState<Date | null>(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [showCheckIn, setShowCheckIn] = useState(false);
 
   // 3. Modal/picker states
   const [showPicker, setShowPicker] = useState(false);
@@ -39,6 +43,9 @@ export default function HomeScreen() {
 
   // 4. Three dots menu
   const [showEditMenu, setShowEditMenu] = useState(false);
+
+  // Add new state for temporary date selection
+  const [tempSelectedDate, setTempSelectedDate] = useState<Date | null>(null);
 
   // Initialize notifications on mount
   useEffect(() => {
@@ -77,11 +84,14 @@ useEffect(() => {
 
     if (storedDailyTime) {
       setDailyTargetTimeState(storedDailyTime);
+      setShowCheckIn(true); // Show check-in circle when daily time is set
 
       if (!DEBUG_ALWAYS_CLEAR_TODAY && history[todayKey]) {
         setIsCheckedIn(true);
         setTodayCheckInTime(new Date(history[todayKey].timestamp));
       }
+    } else {
+      setShowCheckIn(false); // Hide check-in circle when no daily time
     }
   };
   loadData();
@@ -92,20 +102,8 @@ useEffect(() => {
   // ---------------------------
   const handleDailyTimePress = async () => {
     if (!dailyTargetTimeState) {
-      Alert.alert(
-        'Set Daily Time',
-        'Are you sure you want to set your daily birth control time?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Set Time',
-            onPress: () => {
-              setPickerMode('DAILY_TARGET');
-              setShowPicker(true);
-            },
-          },
-        ]
-      );
+      setPickerMode('DAILY_TARGET');
+      setShowPicker(true);
     } else {
       Alert.alert(
         'Change Daily Time',
@@ -192,6 +190,7 @@ useEffect(() => {
   // ---------------------------
   const handleSetTime = async (event: any, date: Date | undefined) => {
     setShowPicker(false);
+    setShowCheckIn(true); // Show check-in circle after setting time
     if (!date) return;
 
     switch (pickerMode) {
@@ -232,18 +231,38 @@ useEffect(() => {
     }
   };
 
+  // Modify handleSetTime to handle the onChange event without saving
+  const handleDateChange = (event: any, date: Date | undefined) => {
+    if (Platform.OS === 'android') {
+      // Android handles confirmation differently
+      setShowPicker(false);
+      if (date) handleSetTime(event, date);
+    } else {
+      // iOS just updates the temporary date
+      if (date) setTempSelectedDate(date);
+    }
+  };
+
+  // Add new function to handle save button press
+  const handleSaveTime = () => {
+    if (tempSelectedDate) {
+      handleSetTime(null, tempSelectedDate);
+    }
+    setTempSelectedDate(null);
+  };
+
   // ---------------------------
   // E) Circle color logic
   // ---------------------------
   const getCircleColor = () => {
     // If daily time not set, remain grey
     if (!dailyTargetTimeState) {
-      return { backgroundColor: '#ddd' };
+      return { backgroundColor: Colors.light.lynneBrown };
     }
 
     // If user hasn't checked in yet, remain grey
     if (!isCheckedIn || !todayCheckInTime) {
-      return { backgroundColor: '#ddd' };
+      return { backgroundColor: Colors.light.lynneBrown };
     }
 
     const targetMinutes =
@@ -252,24 +271,29 @@ useEffect(() => {
     const timeDiff = Math.abs(checkInMinutes - targetMinutes);
     const status = getCheckInStatus(timeDiff);
 
+    console.log('status', status);
+
     switch (status) {
       case 'onTime':
-        return { backgroundColor: '#4CAF50' }; // Green
+        return { backgroundColor: '#c9cba3' }; // Green
       case 'slightlyLate':
-        return { backgroundColor: '#FFD700' }; // Yellow
+        return { backgroundColor: '#ffe1a8' }; // Yellow
       case 'veryLate':
-        return { backgroundColor: '#FF8C00' }; // Orange
+        return { backgroundColor: '#f19c79' }; // Orange
       case 'missed':
-        return { backgroundColor: '#DC143C' }; // Red
+        return { backgroundColor: '#a44a3f' }; // Red
       default:
-        return { backgroundColor: '#ddd' };
+        return { backgroundColor: '##46403A' };
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Title */}
-      <Text style={styles.title}>Birth Control Tracker</Text>
+      {/* Logo */}
+      <Image
+        source={require('../../assets/images/icon.png')}
+        style={styles.logo}
+      />
 
       {/* Timer Icon - change persistent daily time */}
       <TouchableOpacity style={styles.targetTimeContainer} onPress={handleDailyTimePress}>
@@ -288,14 +312,15 @@ useEffect(() => {
       <TouchableOpacity style={styles.menuButton} onPress={() => setShowEditMenu(true)}>
         <MaterialIcons name="more-vert" size={24} color="black" />
       </TouchableOpacity>
-     {/* Display Today's Check-In Time Underneath the Circle */}
-{isCheckedIn && todayCheckInTime && (
-  <Text style={styles.checkInTimeText}>
-    Today's Check-In: {todayCheckInTime.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })}
-  </Text>
+      
+      {/* Display Today's Check-In Time Underneath the Circle */}
+      {isCheckedIn && todayCheckInTime && (
+        <Text style={styles.checkInTimeText}>
+          Today's Check-In: {todayCheckInTime.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </Text>
 )}
 
       {/* Edit Menu Modal */}
@@ -330,34 +355,53 @@ useEffect(() => {
         </TouchableOpacity>
       </Modal>
 
-      {/* Check-In Circle */}
-      <TouchableOpacity
-        style={[styles.circle, getCircleColor()]}
-        onPress={handleCheckInPress}
-        disabled={isCheckedIn} // Disabled if already checked in
-      >
-        {/* Text inside circle */}
-        {!dailyTargetTimeState ? (
-          <Text style={styles.circleText}>Set Daily Time</Text>
-        ) : isCheckedIn && todayCheckInTime ? (
-          <Text style={styles.circleText}>✔</Text>
-        ) : (
-          <Text style={styles.circleText}>Check In</Text>
-        )}
-      </TouchableOpacity>
+      {/* Check-In Circle - Only show when showCheckIn is true and picker is not showing */}
+      {showCheckIn && !showPicker && (
+        <TouchableOpacity
+          style={[styles.circle, getCircleColor()]}
+          onPress={handleCheckInPress}
+          disabled={isCheckedIn}
+        >
+          {!dailyTargetTimeState ? (
+            <Text style={styles.circleText}>Set Daily Time</Text>
+          ) : isCheckedIn && todayCheckInTime ? (
+            <Image 
+              source={require('../../assets/images/done-icon.png')}
+              style={styles.circleDoneIcon}
+            />
+          ) : (
+            <Text style={styles.circleText}>Check In</Text>
+          )}
+        </TouchableOpacity>
+      )}
 
       {/* DateTime Picker (ONLY for daily target time or editing today's time) */}
       {showPicker && (
-        <DateTimePicker
-          value={
-            pickerMode === 'DAILY_TARGET'
-              ? dailyTargetTimeState || new Date()
-              : todayCheckInTime || new Date()
-          }
-          mode="time"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleSetTime}
-        />
+        <View style={styles.datePickerContainer}>
+          <DateTimePicker
+            value={
+              Platform.OS === 'ios'
+                ? tempSelectedDate ||
+                  (pickerMode === 'DAILY_TARGET'
+                    ? dailyTargetTimeState || new Date()
+                    : todayCheckInTime || new Date())
+                : pickerMode === 'DAILY_TARGET'
+                ? dailyTargetTimeState || new Date()
+                : todayCheckInTime || new Date()
+            }
+            mode="time"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+          />
+          {Platform.OS === 'ios' && (
+            <TouchableOpacity 
+              style={styles.saveButton}
+              onPress={handleSaveTime}
+            >
+              <Text style={styles.saveButtonText}>save</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )}
     </View>
   );
@@ -369,10 +413,15 @@ useEffect(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+  },
+  logo: {
+    width: 220,
+    height: 220,
+    marginBottom: 20,
+    resizeMode: 'contain',
   },
   title: {
     fontSize: 24,
@@ -382,7 +431,7 @@ const styles = StyleSheet.create({
   // Timer icon in top left
   targetTimeContainer: {
     position: 'absolute',
-    top: 40,
+    top: 70,
     left: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -395,7 +444,7 @@ const styles = StyleSheet.create({
   // Three dots menu
   menuButton: {
     position: 'absolute',
-    top: 40,
+    top: 70,
     right: 20,
     padding: 10,
   },
@@ -426,9 +475,9 @@ const styles = StyleSheet.create({
   },
   // Main check-in circle
   circle: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+    width: 250,
+    height: 250,
+    borderRadius: 250,
     marginBottom: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -442,6 +491,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#555',
     marginTop: 10,
+    marginBottom: 10,
     textAlign: 'center',
+  },
+  datePickerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  saveButton: {
+    backgroundColor: Colors.light.lynneBrown,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  circleDoneIcon: {
+    width: 100,
+    height: 100,
+    resizeMode: 'contain',
   },
 });
