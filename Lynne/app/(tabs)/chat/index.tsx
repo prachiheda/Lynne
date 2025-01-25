@@ -1,6 +1,25 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, TouchableOpacity, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { EXPO_PUBLIC_GEMINI_API_KEY } from '@env';
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(EXPO_PUBLIC_GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+
+const INITIAL_PROMPT = `You are a knowledgeable and empathetic healthcare assistant specializing in birth control and reproductive health. Your role is to:
+
+1. Help users track and understand their symptoms with different birth control methods
+2. Provide doctor-certified, evidence-based information about various birth control options
+3. Assist users in making informed decisions by explaining pros, cons, and considerations
+4. Always remind users to consult healthcare providers for medical advice
+5. Maintain a professional yet friendly tone
+6. Keep responses concise and easy to understand
+
+Remember: Never provide medical diagnoses or prescriptions. Always encourage users to discuss specific concerns with their healthcare provider.
+
+How can I help you learn more about birth control options today?`;
 
 interface Message {
   text: string;
@@ -11,9 +30,42 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [chat, setChat] = useState<any>(null);
+
+  useEffect(() => {
+    // Initialize chat with the welcome message
+    const initializeChat = async () => {
+      setIsLoading(true);
+      try {
+        const newChat = model.startChat({
+          history: [
+            {
+              role: 'user',
+              parts: [{ text: INITIAL_PROMPT }],
+            },
+          ],
+        });
+        setChat(newChat);
+        
+        const result = await newChat.sendMessage([{ text: INITIAL_PROMPT }]);
+        const response = await result.response;
+        setMessages([{ text: response.text(), isUser: false }]);
+      } catch (error) {
+        console.error('Error initializing chat:', error);
+        setMessages([{ 
+          text: 'Hello! I\'m your birth control health assistant. How can I help you today?',
+          isUser: false 
+        }]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeChat();
+  }, []);
 
   const sendMessage = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !chat) return;
 
     const userMessage = { text: inputText.trim(), isUser: true };
     setMessages(prev => [...prev, userMessage]);
@@ -21,27 +73,16 @@ export default function ChatScreen() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            { role: 'system', content: 'You are a helpful assistant.' },
-            { role: 'user', content: inputText.trim() }
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const botMessage = { text: data.choices[0].message.content, isUser: false };
+      const result = await chat.sendMessage([{ text: inputText.trim() }]);
+      const response = await result.response;
+      const botMessage = { text: response.text(), isUser: false };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error:', error);
-      const errorMessage = { text: 'Sorry, I encountered an error. Please try again.', isUser: false };
+      const errorMessage = { 
+        text: 'I apologize, but I encountered an error. Please try asking your question again.',
+        isUser: false 
+      };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -83,7 +124,7 @@ export default function ChatScreen() {
             style={styles.input}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Type a message..."
+            placeholder="Ask about birth control options..."
             multiline
             placeholderTextColor="#666"
           />
@@ -131,6 +172,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
+    lineHeight: 22,
   },
   userText: {
     color: '#fff',
