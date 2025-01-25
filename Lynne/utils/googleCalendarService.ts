@@ -30,12 +30,13 @@ export const signInWithGoogle = async () => {
   try {
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(
       EXPO_REDIRECT_URI
-    )}&response_type=token&scope=${encodeURIComponent('https://www.googleapis.com/auth/calendar.readonly')}&access_type=offline&prompt=consent`;
+    )}&response_type=token&scope=${encodeURIComponent('https://www.googleapis.com/auth/calendar.readonly')}&prompt=consent`;
 
     const result = await WebBrowser.openAuthSessionAsync(authUrl, EXPO_REDIRECT_URI);
+
     console.log('Auth result:', result);
 
-    if (result.type === 'success') {
+    if (result.type === 'success' && result.url) {
       const params = new URLSearchParams(result.url.split('#')[1]);
       const accessToken = params.get('access_token');
       if (accessToken) {
