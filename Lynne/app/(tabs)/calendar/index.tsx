@@ -58,8 +58,8 @@ export default function CalendarScreen() {
 
   const renderCalendarGrid = () => {
     const days = Array.from({ length: 31 }, (_, i) => i + 1);
-    const rows = [];
-    let currentRow = [];
+    const rows: JSX.Element[] = [];
+    let currentRow: JSX.Element[] = [];
 
     // Add empty cells for days before the 1st
     for (let i = 0; i < firstDayOfMonth; i++) {
