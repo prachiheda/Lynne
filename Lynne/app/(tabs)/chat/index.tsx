@@ -17,8 +17,9 @@ const INITIAL_PROMPT = `You are Lynne, a friendly and educational AI assistant f
 Key guidelines:
 • Keep responses around a few sentences
 • Break responses into bullet point format
+• Any symptoms or side effects that a user inputs should be treated as if they are logging them. Remember what symptoms they have as they can ask for the trends of their symptoms later.
 • Use easy to understand language
-• If asked about other birth control methods or random topics, politely redirect to birth control pill topics
+• If asked about other birth control methods or random topics, politely redirect to birth control pill topics. Don't answer their questions
 • Remind users that this is for educational purposes only and that they should consult with a healthcare provider for personalized medical advice
 
 Example redirection: "While I understand your interest in [other method], I'm specialized in birth control pill education. Would you like to learn about:
@@ -33,75 +34,6 @@ interface Message {
   text: string;
   isUser: boolean;
 }
-
-// Function to parse markdown-style formatting
-const parseFormatting = (text: string) => {
-  // Clean up any malformed formatting and normalize spacing
-  text = text
-    // Normalize newlines and remove excessive spacing
-    .replace(/\n{2,}/g, '\n\n')
-    .replace(/^\s+|\s+$/g, '')
-    // Fix malformed asterisks and underscores
-    .replace(/(\w)[\*_]/g, '$1')
-    .replace(/[\*_](\w)/g, '$1')
-    // Fix bullet points with proper spacing
-    .replace(/(?:^|\n)[\s]*[•\*][\s]*/g, '\n• ')
-    .replace(/\n{2,}•/g, '\n•')
-    // Fix numbered lists
-    .replace(/(?:^|\n)[\s]*(\d+)\.[\s]*/g, '\n$1. ')
-    // Remove extra whitespace
-    .replace(/[ \t]+/g, ' ')
-    .trim();
-
-  // Replace **text** with bold style
-  text = text.replace(/\*\*(.*?)\*\*/g, (_, p1) => `[b]${p1}[/b]`);
-  // Replace *text* with italic style
-  text = text.replace(/\*((?!\*).+?)\*/g, (_, p1) => `[i]${p1}[/i]`);
-  // Replace _text_ with underline style
-  text = text.replace(/_((?!_).+?)_/g, (_, p1) => `[u]${p1}[/u]`);
-  
-  // Split into segments
-  const segments = text.split(/\[(\/?(b|i|u))\]/);
-  
-  return segments.map((segment, index) => {
-    if (segment === 'b') return null;
-    if (segment === 'i') return null;
-    if (segment === 'u') return null;
-    if (segment === '/b') return null;
-    if (segment === '/i') return null;
-    if (segment === '/u') return null;
-    
-    const style: Array<{ fontWeight?: 'bold'; fontStyle?: 'italic'; textDecorationLine?: 'underline' }> = [];
-    if (index > 0) {
-      const tag = segments[index - 1];
-      if (tag === 'b') style.push(styles.boldText);
-      if (tag === 'i') style.push(styles.italicText);
-      if (tag === 'u') style.push(styles.underlineText);
-    }
-    
-    // Handle bullet points and numbered lists with proper indentation
-    const lines = segment.split('\n').filter(line => line.trim()).map((line, lineIndex) => {
-      if (line.startsWith('• ') || /^\d+\.\s/.test(line)) {
-        return (
-          <View key={lineIndex} style={styles.listItemContainer}>
-            <Text style={[styles.messageText, ...style, styles.botText]}>
-              {line.trim()}
-            </Text>
-          </View>
-        );
-      }
-      
-      // Regular text
-      return (
-        <Text key={lineIndex} style={[styles.messageText, ...style, styles.botText]}>
-          {line.trim()}
-        </Text>
-      );
-    });
-
-    return <View key={index} style={styles.textContainer}>{lines}</View>;
-  });
-};
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -180,13 +112,12 @@ export default function ChatScreen() {
                 message.isUser ? styles.userBubble : styles.botBubble
               ]}
             >
-              {message.isUser ? (
-                <Text style={[styles.messageText, styles.userText]}>
-                  {message.text}
-                </Text>
-              ) : (
-                parseFormatting(message.text)
-              )}
+              <Text style={[
+                styles.messageText,
+                message.isUser ? styles.userText : styles.botText
+              ]}>
+                {message.text}
+              </Text>
             </View>
           ))}
           {isLoading && (
@@ -201,7 +132,7 @@ export default function ChatScreen() {
             style={styles.input}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Ask about birth control options..."
+            placeholder="Ask about birth control pills..."
             multiline
             placeholderTextColor="#666"
           />
@@ -257,15 +188,6 @@ const styles = StyleSheet.create({
   botText: {
     color: '#000',
   },
-  boldText: {
-    fontWeight: 'bold',
-  },
-  italicText: {
-    fontStyle: 'italic',
-  },
-  underlineText: {
-    textDecorationLine: 'underline',
-  },
   inputContainer: {
     flexDirection: 'row',
     padding: 10,
@@ -298,12 +220,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  listItemContainer: {
-    paddingLeft: 16,
-    marginVertical: 4,
-  },
-  textContainer: {
-    marginBottom: 4,
   },
 }); 
