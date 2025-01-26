@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
-import {
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  EXPO_REDIRECT_URI,
-} from '@env';
+import * as FileSystem from 'expo-file-system';
 
-const GOOGLE_AUTH_KEY = 'google_auth';
+const CALENDAR_DATA_KEY = 'calendar_data';
 
 interface TimeSlot {
+  start: Date;
+  end: Date;
+}
+
+interface CalendarEvent {
+  summary: string;
   start: Date;
   end: Date;
 }
@@ -26,67 +26,59 @@ interface ConflictRecommendation {
   };
 }
 
+// Mock function to simulate Google Sign in and load mock data
 export const signInWithGoogle = async () => {
   try {
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      EXPO_REDIRECT_URI
-    )}&response_type=token&scope=${encodeURIComponent('https://www.googleapis.com/auth/calendar.readonly')}&prompt=consent`;
-
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, EXPO_REDIRECT_URI);
-
-    console.log('Auth result:', result);
-
-    if (result.type === 'success' && result.url) {
-      const params = new URLSearchParams(result.url.split('#')[1]);
-      const accessToken = params.get('access_token');
-      if (accessToken) {
-        await AsyncStorage.setItem(GOOGLE_AUTH_KEY, JSON.stringify({ accessToken }));
-        return true;
+    // Read the mock ICS file from constants
+    const mockEvents = [
+      {
+        summary: "Morning Meeting",
+        start: new Date(2024, 3, 15, 9, 0),
+        end: new Date(2024, 3, 15, 10, 0)
+      },
+      {
+        summary: "Lunch with Team",
+        start: new Date(2024, 3, 15, 12, 0),
+        end: new Date(2024, 3, 15, 13, 0)
+      },
+      {
+        summary: "Project Review",
+        start: new Date(2024, 3, 15, 14, 0),
+        end: new Date(2024, 3, 15, 15, 30)
+      },
+      {
+        summary: "Gym",
+        start: new Date(2024, 3, 15, 17, 0),
+        end: new Date(2024, 3, 15, 18, 0)
       }
-    }
-    return false;
+    ];
+
+    await AsyncStorage.setItem(CALENDAR_DATA_KEY, JSON.stringify({ 
+      isConnected: true,
+      events: mockEvents 
+    }));
+    return true;
   } catch (error) {
-    console.error('Google sign in error:', error);
+    console.error('Error loading mock calendar data:', error);
     return false;
   }
 };
 
 export const checkForConflicts = async (targetTime: Date): Promise<ConflictRecommendation | null> => {
   try {
-    const authData = await AsyncStorage.getItem(GOOGLE_AUTH_KEY);
-    if (!authData) return null;
+    const calendarData = await AsyncStorage.getItem(CALENDAR_DATA_KEY);
+    if (!calendarData) return null;
 
-    const { accessToken } = JSON.parse(authData);
+    const { events } = JSON.parse(calendarData);
+    if (!events) return null;
 
-    // Get start and end of the day
-    const startOfDay = new Date(targetTime);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(targetTime);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // Get events for the day
-    const response = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch calendar events');
-    }
-
-    const data = await response.json();
-    const events = data.items || [];
     const targetHour = targetTime.getHours();
     const targetMinute = targetTime.getMinutes();
 
     // Find conflicts
     for (const event of events) {
-      const eventStart = new Date(event.start?.dateTime || event.start?.date);
-      const eventEnd = new Date(event.end?.dateTime || event.end?.date);
+      const eventStart = new Date(event.start);
+      const eventEnd = new Date(event.end);
 
       // Check if target time falls within event
       if (
@@ -113,8 +105,8 @@ export const checkForConflicts = async (targetTime: Date): Promise<ConflictRecom
             end: eventEnd,
           },
           recommendedTimes: {
-            before: beforeSlot ? new Date(beforeSlot.start.getTime() + 30 * 60 * 1000) : null, // 30 min after slot starts
-            after: afterSlot ? new Date(afterSlot.start.getTime() + 5 * 60 * 1000) : null, // 5 min after slot starts
+            before: beforeSlot ? new Date(beforeSlot.start.getTime() + 30 * 60 * 1000) : null,
+            after: afterSlot ? new Date(afterSlot.start.getTime() + 5 * 60 * 1000) : null,
           },
         };
       }
@@ -127,11 +119,11 @@ export const checkForConflicts = async (targetTime: Date): Promise<ConflictRecom
   }
 };
 
-const findAvailableSlot = (events: any[], targetSlot: TimeSlot): TimeSlot | null => {
+const findAvailableSlot = (events: CalendarEvent[], targetSlot: TimeSlot): TimeSlot | null => {
   // Check if the slot overlaps with any events
   for (const event of events) {
-    const eventStart = new Date(event.start?.dateTime || event.start?.date);
-    const eventEnd = new Date(event.end?.dateTime || event.end?.date);
+    const eventStart = new Date(event.start);
+    const eventEnd = new Date(event.end);
 
     if (
       (targetSlot.start >= eventStart && targetSlot.start <= eventEnd) ||
