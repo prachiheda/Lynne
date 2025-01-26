@@ -17,7 +17,7 @@ const INITIAL_PROMPT = `You are Lynne, a friendly and educational AI assistant f
 Key guidelines:
 • Keep responses around a few sentences
 • Break responses into bullet point format
-• Any symptoms or side effects that a user inputs should be treated as if they are logging them. Remember what symptoms they have as they can ask for the trends of their symptoms later.
+• Any symptoms or side effects that a user inputs should be treated as if they are logging them. Remember what symptoms they have as they can ask for the trends of their symptoms later.
 • Use easy to understand language
 • If asked about other birth control methods or random topics, politely redirect to birth control pill topics. Don't answer their questions
 • Remind users that this is for educational purposes only and that they should consult with a healthcare provider for personalized medical advice
@@ -34,6 +34,11 @@ interface Message {
   text: string;
   isUser: boolean;
 }
+
+// Function to convert asterisks to bullet points
+const formatMessageText = (text: string) => {
+  return text.replace(/^\s*\*\s*/gm, '• ');
+};
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -57,7 +62,7 @@ export default function ChatScreen() {
         
         const result = await newChat.sendMessage([{ text: INITIAL_PROMPT }]);
         const response = await result.response;
-        setMessages([{ text: response.text(), isUser: false }]);
+        setMessages([{ text: formatMessageText(response.text()), isUser: false }]);
       } catch (error) {
         console.error('Error initializing chat:', error);
         setMessages([{ 
@@ -83,7 +88,7 @@ export default function ChatScreen() {
     try {
       const result = await chat.sendMessage([{ text: inputText.trim() }]);
       const response = await result.response;
-      const botMessage = { text: response.text(), isUser: false };
+      const botMessage = { text: formatMessageText(response.text()), isUser: false };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error:', error);
