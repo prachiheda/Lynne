@@ -19,6 +19,7 @@ Key guidelines:
 • Break responses into bullet point format
 • Any symptoms or side effects that a user inputs should be treated as if they are logging them. Remember what symptoms they have as they can ask for the trends of their symptoms later.
 • Use easy to understand language
+• For the past 2 months, the user has been taking birth control and has been experiencing side effects such as nausea, cramping, headaches, and spotting. The headaches appeared last month. You may only talk about this when the user asks about it
 • If asked about other birth control methods or random topics, politely redirect to birth control pill topics. Don't answer their questions
 • Remind users that this is for educational purposes only and that they should consult with a healthcare provider for personalized medical advice
 
@@ -122,12 +123,14 @@ export default function ChatScreen() {
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 60}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
       >
         <View style={styles.innerContainer}>
           <ScrollView 
             style={styles.messagesContainer}
             contentContainerStyle={styles.messagesContent}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
           >
             {messages.map((message, index) => (
               <View 
@@ -159,6 +162,7 @@ export default function ChatScreen() {
               onChangeText={setInputText}
               placeholder="Ask about birth control pills..."
               multiline
+              maxLength={500}
               placeholderTextColor="#666"
             />
             <TouchableOpacity 
@@ -188,15 +192,16 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     flex: 1,
-    paddingBottom: 90, // Increased padding to account for navbar
+    paddingBottom: 20,
   },
   messagesContainer: {
     flex: 1,
     padding: 10,
+    marginBottom: 20,
   },
   messagesContent: {
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: 5,
   },
   messageBubble: {
     maxWidth: '80%',
@@ -224,34 +229,34 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     position: 'absolute',
-    bottom: 90, // Position above navbar
+    bottom: 80,
     left: 0,
     right: 0,
     flexDirection: 'row',
-    padding: 10,
+    padding: 6,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
-    paddingBottom: Platform.OS === 'ios' ? 15 : 10,
+    paddingBottom: Platform.OS === 'ios' ? 8 : 6,
   },
   input: {
     flex: 1,
     backgroundColor: '#f0f0f0',
     borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    marginRight: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
     fontSize: 16,
-    maxHeight: 100,
+    maxHeight: 80,
     color: '#000',
   },
   sendButton: {
     backgroundColor: '#007AFF',
     borderRadius: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    height: 40,
+    height: 36,
   },
   sendButtonDisabled: {
     backgroundColor: '#ccc',
