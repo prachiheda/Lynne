@@ -85,7 +85,7 @@ export default function SettingsScreen() {
             <MaterialIcons 
               name={isCalendarConnected ? "check-circle" : "add-circle"} 
               size={24} 
-              color={isCalendarConnected ? "#4CAF50" : "#007AFF"} 
+              color={isCalendarConnected ? "#8c9a59" : "#4A6FA5"} 
             />
             <Text style={styles.calendarButtonText}>
               {isCalendarConnected ? 'Calendar Connected' : 'Connect Google Calendar'}
@@ -129,6 +129,8 @@ export default function SettingsScreen() {
               onValueChange={(value) =>
                 setSettings(prev => ({ ...prev, stopRemindersAfterCheckIn: value }))
               }
+              trackColor={{ false: '#767577', true: '#8c9a59' }}
+              thumbColor={settings.stopRemindersAfterCheckIn ? '#ffffff' : '#f4f3f4'}
             />
           </View>
         </View>
@@ -144,7 +146,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f2f2f2',
   },
   scrollView: {
     flex: 1,
@@ -194,7 +196,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#8c9a59',
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
@@ -217,6 +219,6 @@ const styles = StyleSheet.create({
   calendarButtonText: {
     fontSize: 16,
     marginLeft: 10,
-    color: '#007AFF',
+    color: '#4A6FA5',
   },
 }); 

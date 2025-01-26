@@ -329,7 +329,7 @@ useEffect(() => {
       case 'missed':
         return { backgroundColor: '#a44a3f' }; // Red
       default:
-        return { backgroundColor: '##46403A' };
+        return { backgroundColor: '#46403A' };
     }
   };
 
@@ -452,14 +452,14 @@ useEffect(() => {
 
 
       {/* Calendar Recommendations */}
-      {calendarRecommendation && (
+      {calendarRecommendation && !showPicker && (
         <View style={styles.recommendationContainer}>
           <Text style={styles.recommendationTitle}>Smart Recommendation</Text>
           <Text style={styles.recommendationText}>
             Looks like you have a conflict with "{calendarRecommendation.conflictEvent.summary}" at{' '}
             {formatTime(calendarRecommendation.conflictEvent.start)}.
           </Text>
-          <Text style={styles.recommendationText}>We recommend taking your birth control either:</Text>
+          <Text style={styles.recommendationText}>We recommend taking your birth control:</Text>
           {calendarRecommendation.recommendedTimes.before && (
             <Text style={styles.recommendationOption}>
               • Before "{calendarRecommendation.conflictEvent.summary}" at {formatTime(calendarRecommendation.recommendedTimes.before)}
@@ -485,12 +485,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: '#f2f2f2',
   },
   logo: {
     width: 220,
-    height: 220,
-    marginBottom: 20,
+    height: 120,
+    marginBottom: 18,
     resizeMode: 'contain',
   },
   title: {
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
   // Timer icon in top left
   targetTimeContainer: {
     position: 'absolute',
-    top: 70,
+    top: 60,
     left: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   // Three dots menu
   menuButton: {
     position: 'absolute',
-    top: 70,
+    top: 60,
     right: 20,
     padding: 10,
   },
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 250,
-    marginBottom: 20,
+    marginBottom: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -560,8 +560,8 @@ const styles = StyleSheet.create({
   checkInTimeText: {
     fontSize: 16,
     color: '#555',
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 0,
+    marginBottom: 20,
     textAlign: 'center',
   },
   datePickerContainer: {
@@ -602,17 +602,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#007AFF',
+    color: '#4A6FA5',
   },
   recommendationText: {
     fontSize: 16,
-    marginBottom: 8,
-    color: '#333',
+    marginBottom: 5,
+    color: '#555',
   },
   recommendationOption: {
     fontSize: 16,
     marginLeft: 10,
     marginBottom: 5,
-    color: '#4CAF50',
+    color: '#8c9a59',
   },
 });
