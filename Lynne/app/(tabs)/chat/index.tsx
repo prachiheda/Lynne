@@ -188,11 +188,15 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     flex: 1,
-    paddingBottom: 80, // Add space for the navigation bar
+    paddingBottom: 90, // Increased padding to account for navbar
   },
   messagesContainer: {
     flex: 1,
     padding: 10,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   messageBubble: {
     maxWidth: '80%',
@@ -220,7 +224,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 90, // Position above navbar
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -228,7 +232,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
-    paddingBottom: Platform.OS === 'ios' ? 25 : 15,
+    paddingBottom: Platform.OS === 'ios' ? 15 : 10,
   },
   input: {
     flex: 1,
@@ -247,6 +251,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    height: 40,
   },
   sendButtonDisabled: {
     backgroundColor: '#ccc',
@@ -255,9 +260,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingBottom: 30,
   },
 }); 
