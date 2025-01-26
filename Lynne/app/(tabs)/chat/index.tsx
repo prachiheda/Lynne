@@ -37,7 +37,22 @@ interface Message {
 
 // Function to convert asterisks to bullet points
 const formatMessageText = (text: string) => {
+  // First handle bullet points at start of lines
   return text.replace(/^\s*\*\s*/gm, '• ');
+};
+
+// Function to render text with bold sections
+const renderFormattedText = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      // This is bold text, remove the asterisks
+      const boldText = part.slice(2, -2);
+      return <Text key={index} style={{ fontWeight: 'bold' }}>{boldText}</Text>;
+    }
+    return <Text key={index}>{part}</Text>;
+  });
 };
 
 export default function ChatScreen() {
@@ -121,7 +136,7 @@ export default function ChatScreen() {
                 styles.messageText,
                 message.isUser ? styles.userText : styles.botText
               ]}>
-                {message.text}
+                {message.isUser ? message.text : renderFormattedText(formatMessageText(message.text))}
               </Text>
             </View>
           ))}
