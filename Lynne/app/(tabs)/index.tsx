@@ -26,6 +26,8 @@ import {
 } from '../../utils/notificationService';
 import { Colors } from '../../constants/Colors';
 import { checkForConflicts } from '../../utils/googleCalendarService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const CALENDAR_DATA_KEY = 'calendar_data';
 
 export default function HomeScreen() {
   // 1. Persistent daily target time
@@ -51,6 +53,29 @@ export default function HomeScreen() {
   // 5. Calendar recommendation
   const [calendarRecommendation, setCalendarRecommendation] = useState<any>(null);
 
+  // Add state for calendar connection
+const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+
+
+// Add effect to check calendar connection status on mount
+useEffect(() => {
+  const checkCalendarStatus = async () => {
+    const calendarData = await AsyncStorage.getItem(CALENDAR_DATA_KEY);
+    if (calendarData) {
+      const { isConnected } = JSON.parse(calendarData);
+      setIsCalendarConnected(isConnected);
+    }
+  };
+  checkCalendarStatus();
+}, []);
+
+// Only show recommendation if calendar is connected
+{isCalendarConnected && calendarRecommendation && (
+  <View style={styles.recommendationContainer}>
+    <Text style={styles.recommendationTitle}>Smart Recommendation</Text>
+    // ... rest of the recommendation UI ...
+  </View>
+)}
   // Initialize notifications on mount
   useEffect(() => {
     initializeNotifications();
@@ -425,28 +450,6 @@ useEffect(() => {
         </View>
       )}
 
-      {/* Calendar Recommendations */}
-      {calendarRecommendation && (
-        <View style={styles.recommendationContainer}>
-          <Text style={styles.recommendationTitle}>Smart Recommendation</Text>
-          <Text style={styles.recommendationText}>
-            Looks like you have a conflict with "{calendarRecommendation.conflictEvent.summary}" at{' '}
-            {formatTime(calendarRecommendation.conflictEvent.start)}.
-          </Text>
-          <Text style={styles.recommendationText}>We recommend taking your birth control:</Text>
-          {calendarRecommendation.recommendedTimes.before && (
-            <Text style={styles.recommendationOption}>
-              • Before at {formatTime(calendarRecommendation.recommendedTimes.before)}
-            </Text>
-          )}
-          {calendarRecommendation.recommendedTimes.after && (
-            <Text style={styles.recommendationOption}>
-              • After at {formatTime(calendarRecommendation.recommendedTimes.after)}
-            </Text>
-          )}
-        </View>
-
-      )}
 
       {/* Calendar Recommendations */}
       {calendarRecommendation && (
@@ -456,15 +459,15 @@ useEffect(() => {
             Looks like you have a conflict with "{calendarRecommendation.conflictEvent.summary}" at{' '}
             {formatTime(calendarRecommendation.conflictEvent.start)}.
           </Text>
-          <Text style={styles.recommendationText}>We recommend taking your birth control:</Text>
+          <Text style={styles.recommendationText}>We recommend taking your birth control either:</Text>
           {calendarRecommendation.recommendedTimes.before && (
             <Text style={styles.recommendationOption}>
-              • Before at {formatTime(calendarRecommendation.recommendedTimes.before)}
+              • Before "{calendarRecommendation.conflictEvent.summary}" at {formatTime(calendarRecommendation.recommendedTimes.before)}
             </Text>
           )}
           {calendarRecommendation.recommendedTimes.after && (
             <Text style={styles.recommendationOption}>
-              • After at {formatTime(calendarRecommendation.recommendedTimes.after)}
+              • After "{calendarRecommendation.conflictEvent.summary}" at {formatTime(calendarRecommendation.recommendedTimes.after)}
             </Text>
           )}
         </View>

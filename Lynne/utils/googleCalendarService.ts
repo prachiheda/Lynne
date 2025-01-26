@@ -33,23 +33,23 @@ export const signInWithGoogle = async () => {
     const mockEvents = [
       {
         summary: "Morning Meeting",
-        start: new Date(2024, 3, 15, 9, 0),
-        end: new Date(2024, 3, 15, 10, 0)
+        start: new Date(2025, 0, 25, 9, 0),
+        end: new Date(2025, 0, 25, 10, 0)
       },
       {
         summary: "Lunch with Team",
-        start: new Date(2024, 3, 15, 12, 0),
-        end: new Date(2024, 3, 15, 13, 0)
+        start: new Date(2025, 0, 25, 12, 0),
+        end: new Date(2025, 0, 25, 13, 0)
       },
       {
         summary: "Project Review",
-        start: new Date(2024, 3, 15, 14, 0),
-        end: new Date(2024, 3, 15, 15, 30)
+        start: new Date(2025, 0, 25, 14, 0),
+        end: new Date(2025, 0, 25, 15, 30)
       },
       {
         summary: "Gym",
-        start: new Date(2024, 3, 15, 17, 0),
-        end: new Date(2024, 3, 15, 18, 0)
+        start: new Date(2025, 0, 25, 17, 0),
+        end: new Date(2025, 0, 25, 18, 0)
       }
     ];
 
@@ -66,47 +66,61 @@ export const signInWithGoogle = async () => {
 
 export const checkForConflicts = async (targetTime: Date): Promise<ConflictRecommendation | null> => {
   try {
+    
     const calendarData = await AsyncStorage.getItem(CALENDAR_DATA_KEY);
     if (!calendarData) return null;
+    console.log('Calendar Data:', calendarData);
+    if (!calendarData) return null;
 
-    const { events } = JSON.parse(calendarData);
+    const { isConnected, events } = JSON.parse(calendarData);
+    // Only check for conflicts if calendar is connected
+    if (!isConnected || !events) return null;
+    console.log('Events:', events);
     if (!events) return null;
 
     const targetHour = targetTime.getHours();
     const targetMinute = targetTime.getMinutes();
+    console.log('Target time (local):', targetHour + ':' + targetMinute);
 
     // Find conflicts
     for (const event of events) {
+      // Convert event times to local time
       const eventStart = new Date(event.start);
       const eventEnd = new Date(event.end);
+      
+      const eventStartHour = eventStart.getHours();
+      const eventStartMinute = eventStart.getMinutes();
+      const eventEndHour = eventEnd.getHours();
+      const eventEndMinute = eventEnd.getMinutes();
+
+      console.log(`Event: ${event.summary}`);
+      console.log(`Event time (local): ${eventStartHour}:${eventStartMinute} - ${eventEndHour}:${eventEndMinute}`);
+      console.log(`Checking against target time: ${targetHour}:${targetMinute}`);
 
       // Check if target time falls within event
-      if (
-        eventStart.getHours() <= targetHour &&
-        eventEnd.getHours() >= targetHour &&
-        eventStart.getMinutes() <= targetMinute &&
-        eventEnd.getMinutes() >= targetMinute
-      ) {
-        // Find available slots before and after event
-        const beforeSlot = findAvailableSlot(events, {
-          start: new Date(eventStart.getTime() - 60 * 60 * 1000), // 1 hour before
-          end: eventStart,
-        });
+      const isWithinHours = eventStartHour <= targetHour && eventEndHour >= targetHour;
+      const isWithinMinutes = true; // Simplified for testing
 
-        const afterSlot = findAvailableSlot(events, {
-          start: eventEnd,
-          end: new Date(eventEnd.getTime() + 60 * 60 * 1000), // 1 hour after
-        });
+      // Check if target time falls within event
+      
+      if (isWithinHours && isWithinMinutes) {
+        console.log('Conflict found!');
+        // Create recommended times (30 mins before event and 5 mins after)
+        const beforeTime = new Date(eventStart);
+        beforeTime.setMinutes(beforeTime.getMinutes() - 30);
+        
+        const afterTime = new Date(eventEnd);
+        afterTime.setMinutes(afterTime.getMinutes() + 5);
 
         return {
           conflictEvent: {
-            summary: event.summary || 'Busy',
+            summary: event.summary,
             start: eventStart,
             end: eventEnd,
           },
           recommendedTimes: {
-            before: beforeSlot ? new Date(beforeSlot.start.getTime() + 30 * 60 * 1000) : null,
-            after: afterSlot ? new Date(afterSlot.start.getTime() + 5 * 60 * 1000) : null,
+            before: beforeTime,
+            after: afterTime,
           },
         };
       }

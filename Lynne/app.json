@@ -42,16 +42,8 @@
     "extra": {
       "router": {
         "origin": false
-      },
-      "eas": {
-        "projectId": "c8dd8601-863d-4d69-be5a-5b64b0ef0788"
       }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/c8dd8601-863d-4d69-be5a-5b64b0ef0788"
     }
+    
   }
 }
