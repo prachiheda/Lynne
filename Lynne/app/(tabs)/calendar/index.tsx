@@ -139,18 +139,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: '400',
     color: '#000000',
-    marginBottom: 20,
+    marginBottom: 40,
     textAlign: 'center',
+    marginTop: 60,
   },
   mainContainer: {
+    flex: 1,
     paddingHorizontal: 20,
     alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 45,
+    marginTop: 100,
   },
   monthYear: {
     fontSize: 24,

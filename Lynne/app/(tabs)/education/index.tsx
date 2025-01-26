@@ -75,7 +75,7 @@ export default function EducationScreen() {
         <Image source={iconImage} style={styles.icon} />
       </View>
       <ScrollView style={styles.scrollContainer}>
-        <Text style={styles.headerText}>Pick for you</Text>
+        <Text style={styles.headerText}>Picks for you</Text>
         {articles.map((article, index) => (
           <TouchableOpacity key={article.id} style={[styles.article, index === 0 && styles.firstArticle]} onPress={() => {
             Linking.openURL(article.link);

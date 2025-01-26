@@ -3,6 +3,10 @@
 # dependencies
 node_modules/
 
+# Environment variables
+.env
+.env.*
+
 # Expo
 .expo/
 dist/
@@ -27,6 +31,7 @@ yarn-error.*
 
 # macOS
 .DS_Store
+../.DS_Store
 *.pem
 
 # local env files

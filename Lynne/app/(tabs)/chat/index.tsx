@@ -118,54 +118,60 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 60}
       >
-        <ScrollView style={styles.messagesContainer}>
-          {messages.map((message, index) => (
-            <View 
-              key={index} 
-              style={[
-                styles.messageBubble,
-                message.isUser ? styles.userBubble : styles.botBubble
-              ]}
-            >
-              <Text style={[
-                styles.messageText,
-                message.isUser ? styles.userText : styles.botText
-              ]}>
-                {message.isUser ? message.text : renderFormattedText(formatMessageText(message.text))}
-              </Text>
-            </View>
-          ))}
-          {isLoading && (
-            <View style={[styles.messageBubble, styles.botBubble]}>
-              <Text style={[styles.messageText, styles.botText]}>Typing...</Text>
-            </View>
-          )}
-        </ScrollView>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder="Ask about birth control pills..."
-            multiline
-            placeholderTextColor="#666"
-          />
-          <TouchableOpacity 
-            style={[
-              styles.sendButton,
-              (!inputText.trim() || isLoading) && styles.sendButtonDisabled
-            ]} 
-            onPress={sendMessage}
-            disabled={isLoading || !inputText.trim()}
+        <View style={styles.innerContainer}>
+          <ScrollView 
+            style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
           >
-            <Text style={styles.sendButtonText}>Send</Text>
-          </TouchableOpacity>
+            {messages.map((message, index) => (
+              <View 
+                key={index} 
+                style={[
+                  styles.messageBubble,
+                  message.isUser ? styles.userBubble : styles.botBubble
+                ]}
+              >
+                <Text style={[
+                  styles.messageText,
+                  message.isUser ? styles.userText : styles.botText
+                ]}>
+                  {message.isUser ? message.text : renderFormattedText(formatMessageText(message.text))}
+                </Text>
+              </View>
+            ))}
+            {isLoading && (
+              <View style={[styles.messageBubble, styles.botBubble]}>
+                <Text style={[styles.messageText, styles.botText]}>Typing...</Text>
+              </View>
+            )}
+          </ScrollView>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Ask about birth control pills..."
+              multiline
+              placeholderTextColor="#666"
+            />
+            <TouchableOpacity 
+              style={[
+                styles.sendButton,
+                (!inputText.trim() || isLoading) && styles.sendButtonDisabled
+              ]} 
+              onPress={sendMessage}
+              disabled={isLoading || !inputText.trim()}
+            >
+              <Text style={styles.sendButtonText}>Send</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -180,9 +186,17 @@ const styles = StyleSheet.create({
   keyboardAvoid: {
     flex: 1,
   },
+  innerContainer: {
+    flex: 1,
+    paddingBottom: 90, // Increased padding to account for navbar
+  },
   messagesContainer: {
     flex: 1,
     padding: 10,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   messageBubble: {
     maxWidth: '80%',
@@ -209,11 +223,16 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   inputContainer: {
+    position: 'absolute',
+    bottom: 90, // Position above navbar
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     padding: 10,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
+    paddingBottom: Platform.OS === 'ios' ? 15 : 10,
   },
   input: {
     flex: 1,
@@ -232,6 +251,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    height: 40,
   },
   sendButtonDisabled: {
     backgroundColor: '#ccc',

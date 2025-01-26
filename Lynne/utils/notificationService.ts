@@ -64,7 +64,7 @@ export const scheduleNotifications = async (targetTime: Date, settings: Notifica
   if (preNotificationTime > now) {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "Birth Control Reminder",
+        title: "Lynne Birth Control Reminder",
         body: `Time to take your birth control in ${settings.preNotificationTime} minutes!`,
         sound: true,
       },
@@ -75,7 +75,7 @@ export const scheduleNotifications = async (targetTime: Date, settings: Notifica
   // Schedule main notification
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Birth Control Time!",
+      title: "Lynne Birth Control Reminder",
       body: "It's time to take your birth control!",
       sound: true,
     },
@@ -91,7 +91,7 @@ export const scheduleNotifications = async (targetTime: Date, settings: Notifica
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Birth Control Reminder",
-          body: "Don't forget to take your birth control!",
+          body: "Did you know that it cost ~400K to raise a child to 17 years in California?",
           sound: true,
         },
         trigger: reminderTime,
