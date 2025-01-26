@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'transparent',
+    // backgroundColor: 'transparent',
   },
   title: {
     fontSize: 24,
